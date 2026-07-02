@@ -1,8 +1,6 @@
 const Message = require('../models/messageModel');
 const Conversation = require('../models/conversationModel');
 
-// @desc   Send a message
-// @route  POST /api/messages
 const sendMessage = async (req, res) => {
   try {
     const { conversationId, content } = req.body;
@@ -28,8 +26,7 @@ const sendMessage = async (req, res) => {
   }
 };
 
-// @desc   Get all messages in a conversation
-// @route  GET /api/messages/:conversationId
+
 const getMessages = async (req, res) => {
   try {
     console.log('HIT sendMessage');
