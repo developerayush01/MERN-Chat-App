@@ -63,6 +63,43 @@ const loginUser = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const editProfile = async (req, res) => {
+  try {
+    const { username, profilePic } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.username = username || user.username;
+user.profilePic = profilePic || user.profilePic;
+
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+      _id: updatedUser._id,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      profilePic: updatedUser.profilePic,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const logoutUser = (req, res) => {
   res.cookie('token', '', {
     httpOnly: true,
@@ -71,4 +108,8 @@ const logoutUser = (req, res) => {
   res.status(200).json({ message: 'Logged out successfully' });
 };
 
-module.exports = { registerUser, loginUser,logoutUser };
+const getMe = async (req, res) => {
+  res.status(200).json(req.user);
+};
+
+module.exports = { registerUser, loginUser, logoutUser, getMe, getProfile, editProfile };
