@@ -381,3 +381,59 @@ button[type="submit"]:disabled {
 .message-input button:hover {
   background: #0f7a6e;
 }
+
+.whatsapp-loader {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f0f2f5;
+  position: relative;
+}
+
+.loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.loader-icon {
+  font-size: 4rem;
+  filter: grayscale(0.3);
+}
+
+.loader-content h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.loader-bar {
+  width: 200px;
+  height: 3px;
+  background-color: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.loader-bar-fill {
+  height: 100%;
+  width: 40%;
+  background-color: #128c7e;
+  border-radius: 3px;
+  animation: loadingBar 1s ease-in-out infinite alternate;
+}
+
+@keyframes loadingBar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+
+.loader-footer {
+  position: absolute;
+  bottom: 2rem;
+  font-size: 0.85rem;
+  color: #128c7e;
+}

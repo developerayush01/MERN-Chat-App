@@ -5,6 +5,7 @@ import { SocketContext } from '../../context/SocketContext';
 
 const Sidebar = ({ selectedConversation, setSelectedConversation }) => {
   const { user, logout } = useContext(AuthContext);
+    const { socket } = useContext(SocketContext);
   const { onlineUsers } = useContext(SocketContext);
   const [conversations, setConversations] = useState([]);
   const [search, setSearch] = useState('');
@@ -24,6 +25,25 @@ const Sidebar = ({ selectedConversation, setSelectedConversation }) => {
     };
     getConversations();
   }, []);
+
+
+  useEffect(() => {
+  if (!socket) return;
+
+  socket.on('receiveMessage', (message) => {
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv._id === message.conversationId
+          ? { ...conv, lastMessage: message }
+          : conv
+      )
+    );
+  });
+
+  return () => {
+    socket.off('receiveMessage');
+  };
+}, [socket]);
 
   const handleSearch = async (e) => {
     e.preventDefault();

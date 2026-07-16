@@ -26,25 +26,25 @@ const ChatWindow = ({ selectedConversation }) => {
     };
 
     getMessages();
+  }, [selectedConversation]);
 
-    if (socket) {
-      socket.emit('joinConversation', selectedConversation._id);
-    }
-  }, [selectedConversation, socket]);
+  useEffect(() => {
+    if (!socket || !selectedConversation) return;
 
-useEffect(() => {
-  if (!socket) return;
+    socket.emit('joinConversation', selectedConversation._id);
 
-  socket.on('receiveMessage', (message) => {
-    if (message.sender._id !== user._id) { // ← only add if from OTHER user
-      setMessages((prev) => [...prev, message]);
-    }
-  });
+    const handleReceiveMessage = (message) => {
+      if (message.sender._id !== user._id) {
+        setMessages((prev) => [...prev, message]);
+      }
+    };
 
-  return () => {
-    socket.off('receiveMessage');
-  };
-}, [socket, user]);
+    socket.on('receiveMessage', handleReceiveMessage);
+
+    return () => {
+      socket.off('receiveMessage', handleReceiveMessage);
+    };
+  }, [socket, selectedConversation, user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -62,8 +62,10 @@ useEffect(() => {
       },
       { withCredentials: true }
     );
-    setMessages((prev) => [...prev, res.data]); // ← add message to state immediately
+    setMessages((prev) => [...prev, res.data]);
     setNewMessage('');
+  
+    socket.emit('sendMessage', res.data);
   } catch (error) {
     console.error(error);
   }
