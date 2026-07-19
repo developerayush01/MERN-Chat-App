@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 
 const Login = () => {
@@ -18,15 +18,15 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post(
-        'http://localhost:5000/api/users/login',
-        { email, password },
-        { withCredentials: true }
-      );
+      const res = await axios.post('/users/login', { email, password });
       login(res.data);
       navigate('/chat');
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
+      if (err.response?.status === 403) {
+    navigate('/verify-otp', { state: { userId: err.response.data.userId } });
+  } else {
+    setError(err.response?.data?.message || 'Something went wrong');
+  }
     } finally {
       setLoading(false);
     }

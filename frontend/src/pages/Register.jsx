@@ -1,7 +1,8 @@
 import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../services/api';
 import { AuthContext } from '../context/AuthContext';
+import axiosInstance from '../services/api';
 
 const Register = () => {
   const [username, setUsername] = useState('');
@@ -19,13 +20,8 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post(
-        'http://localhost:5000/api/users/register',
-        { username, email, password },
-        { withCredentials: true }
-      );
-      login(res.data);
-      navigate('/chat');
+      const res = await axiosInstance.post('/users/register', { username, email, password });
+navigate('/verify-otp', { state: { userId: res.data.userId } });
     } catch (err) {
       setError(err.response?.data?.message || 'Something went wrong');
     } finally {

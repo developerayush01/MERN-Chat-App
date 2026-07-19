@@ -1,5 +1,7 @@
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
+const sendEmail = require('../utils/sendEmail');
+const crypto = require('crypto');
 
 const generateToken = (res, id) => {
   const token = jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '24h' });
@@ -8,26 +10,81 @@ const generateToken = (res, id) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 24 * 60 * 60 * 1000,
   });
 
   return token;
+};
+
+const generateOtp = () => {
+  return crypto.randomInt(100000, 999999).toString();
 };
 
 const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters' });
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = await User.create({ username, email, password });
+    const otp = generateOtp();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    generateToken(res, user._id); // sets cookie
+    const user = await User.create({
+      username,
+      email,
+      password,
+      otp,
+      otpExpiry,
+    });
+
+    await sendEmail(email, otp);
 
     res.status(201).json({
+      message: 'OTP sent to your email. Please verify to continue.',
+      userId: user._id,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const verifyOtp = async (req, res) => {
+  try {
+    const { userId, otp } = req.body;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: 'User already verified' });
+    }
+
+    if (user.otp !== otp) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+
+    if (user.otpExpiry < new Date()) {
+      return res.status(400).json({ message: 'OTP expired' });
+    }
+
+    user.isVerified = true;
+    user.otp = null;
+    user.otpExpiry = null;
+    await user.save();
+
+    generateToken(res, user._id);
+
+    res.status(200).json({
       _id: user._id,
       username: user.username,
       email: user.email,
@@ -51,7 +108,21 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ message: 'Invalid Password' });
     }
 
-    generateToken(res, user._id); // sets cookie
+    // if not verified, send new OTP
+    if (!user.isVerified) {
+      const otp = generateOtp();
+      user.otp = otp;
+      user.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+      await user.save();
+      await sendEmail(email, otp);
+
+      return res.status(403).json({
+        message: 'Account not verified. New OTP sent to your email.',
+        userId: user._id,
+      });
+    }
+
+    generateToken(res, user._id);
 
     res.status(200).json({
       _id: user._id,
@@ -125,4 +196,4 @@ const getMe = async (req, res) => {
   res.status(200).json(req.user);
 };
 
-module.exports = { registerUser, loginUser, logoutUser, getMe, getProfile, editProfile,searchUsers };
+module.exports = { registerUser, loginUser, logoutUser, getMe, getProfile, editProfile, searchUsers, verifyOtp };
