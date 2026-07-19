@@ -19,9 +19,10 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const res = await axiosInstance.post('/users/register', { username, email, password });
-navigate('/verify-otp', { state: { userId: res.data.userId } });
-    } catch (err) {
+  const res = await axiosInstance.post('/users/register', { username, email, password });
+  login(res.data);
+  navigate('/chat');
+} catch (err) {
       setError(err.response?.data?.message || 'Something went wrong');
     } finally {
       setLoading(false);

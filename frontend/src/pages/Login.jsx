@@ -22,12 +22,8 @@ const Login = () => {
       login(res.data);
       navigate('/chat');
     } catch (err) {
-      if (err.response?.status === 403) {
-    navigate('/verify-otp', { state: { userId: err.response.data.userId } });
-  } else {
-    setError(err.response?.data?.message || 'Something went wrong');
-  }
-    } finally {
+  setError(err.response?.data?.message || 'Something went wrong');
+} finally {
       setLoading(false);
     }
   };
