@@ -1,19 +1,13 @@
-const nodemailer = require('nodemailer');
+const { BrevoClient } = require('@getbrevo/brevo');
+
+const brevo = new BrevoClient({
+  apiKey: process.env.BREVO_API_KEY,
+});
 
 const sendEmail = async (to, otp) => {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  });
-
-  await transporter.sendMail({
-    from: `"Chat App" <${process.env.EMAIL}>`,
-    to,
+  await brevo.transactionalEmails.sendTransacEmail({
     subject: 'Verify your account',
-    html: `
+    htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 400px; margin: auto;">
         <h2 style="color: #128c7e;">Verify your account</h2>
         <p>Your OTP code is:</p>
@@ -22,6 +16,8 @@ const sendEmail = async (to, otp) => {
         <p>If you didn't register, ignore this email.</p>
       </div>
     `,
+    sender: { name: 'Chat App', email: process.env.EMAIL },
+    to: [{ email: to }],
   });
 };
 
