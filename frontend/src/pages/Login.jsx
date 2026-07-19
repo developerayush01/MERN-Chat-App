@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from '../services/api';
+import axiosInstance from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 
 const Login = () => {
@@ -18,7 +18,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post('/users/login', { email, password });
+      const res = await axiosInstance.post('/users/login', { email, password });
       login(res.data);
       navigate('/chat');
     } catch (err) {

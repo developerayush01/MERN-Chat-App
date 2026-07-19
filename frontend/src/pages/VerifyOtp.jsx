@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import axios from '../services/api';
+import axiosInstance from '../services/api';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
@@ -21,7 +21,7 @@ const VerifyOtp = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post('/users/verify-otp', { userId, otp });
+      const res = await axiosInstance.post('/users/verify-otp', { userId, otp });
       login(res.data);
       navigate('/chat');
     } catch (err) {
