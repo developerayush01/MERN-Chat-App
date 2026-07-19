@@ -22,20 +22,25 @@ const generateOtp = () => {
 
 const registerUser = async (req, res) => {
   try {
+    console.log('1. Register request received:', req.body.email);
+
     const { username, email, password } = req.body;
 
     if (password.length < 8) {
       return res.status(400).json({ message: 'Password must be at least 8 characters' });
     }
 
+    console.log('2. Checking if user exists...');
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
+    console.log('3. User does not exist, proceeding...');
 
     const otp = generateOtp();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
+    console.log('4. Creating user in DB...');
     const user = await User.create({
       username,
       email,
@@ -43,14 +48,19 @@ const registerUser = async (req, res) => {
       otp,
       otpExpiry,
     });
+    console.log('5. User created:', user._id);
 
+    console.log('6. Attempting to send email...');
     await sendEmail(email, otp);
+    console.log('7. Email sent successfully!');
 
     res.status(201).json({
       message: 'OTP sent to your email. Please verify to continue.',
       userId: user._id,
     });
+    console.log('8. Response sent to client');
   } catch (error) {
+    console.log('ERROR at some step:', error.message);
     res.status(500).json({ message: error.message });
   }
 };
