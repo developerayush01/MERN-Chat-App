@@ -11,9 +11,9 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (user) {
-      const newSocket = io(VITE_API_URL, {
-        withCredentials: true,
-      });
+      const newSocket = io(import.meta.env.VITE_API_URL.replace('/api', ''), {
+  withCredentials: true,
+});
 
       newSocket.on('connect', () => {
         console.log('Socket connected:', newSocket.id);
